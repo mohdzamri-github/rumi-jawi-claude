@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rumi ke Jawi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .output-group {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 80px;
+        }
+
+        .output-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .output-text {
+            font-size: 28px;
+            color: #333;
+            font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Noto Naskh Arabic', 'Scheherazade', 'Amiri', serif;
+            direction: rtl;
+            text-align: right;
+            min-height: 40px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        .not-found {
+            color: #999;
+            font-style: italic;
+            font-size: 16px;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .similar-words {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .similar-words-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .similar-word {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .similar-word:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            transform: translateX(-2px);
+        }
+
+        .similar-word .rumi {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .similar-word .jawi {
+            font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Noto Naskh Arabic', 'Scheherazade', 'Amiri', serif;
+            font-size: 20px;
+            color: #667eea;
+            direction: rtl;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border: 2px solid #667eea;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: #f0f0f0;
+        }
+
+        .autocomplete-item .rumi {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .autocomplete-item .jawi {
+            font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Noto Naskh Arabic', 'Scheherazade', 'Amiri', serif;
+            font-size: 18px;
+            color: #667eea;
+            direction: rtl;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rumi ke Jawi</h1>
+
+        <div class="input-group">
+            <label for="rumiInput">Masukkan perkataan Rumi:</label>
+            <div class="input-wrapper">
+                <input
+                    type="text"
+                    id="rumiInput"
+                    placeholder="Contoh: abad, sakit, rumah..."
+                    autocomplete="off"
+                >
+                <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+            </div>
+        </div>
+
+        <div class="output-group">
+            <div class="output-label">Jawi:</div>
+            <div class="output-text" id="jawiOutput">-</div>
+        </div>
+
+        <div class="similar-words" id="similarWords">
+            <div class="similar-words-label">Perkataan berkaitan:</div>
+        </div>
+
+        <div class="status" id="status">Memuatkan kamus...</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
